@@ -4,7 +4,6 @@ from aiohttp import web
 
 from utils.database import Document
 
-
 RATELIMIT_PERIOD_LENGTH: datetime.timedelta = datetime.timedelta(hours=1)
 RATELIMIT_MAX_PER_PERIOD: int = 90
 

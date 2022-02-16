@@ -1,6 +1,6 @@
-# aiohttp-mongodb-base
+# redirector
 
-A base for aiohttp applications using MongoDB.
+A simple redirection tool that can be used to redirect users to a different page, as well as logging IP addresses.
 
 ## Hosting
 
@@ -8,10 +8,11 @@ Docker is the preferred way to host an instance of the API.
 
 Environment Variables:
 
-* `EXAMPLE_PORT`: Configures the webserver port. Default is `8081`.
-* `EXAMPLE_HOST`: Configures the webserver host. Default is `0.0.0.0`.
-* `EXAMPLE_URI`: MongoDB connection URI. Default is `mongodb://mongo`.
-* `EXAMPLE_DB`: MongoDB database name. Default is `EXAMPLE`.
+* `REDIRECT_PORT`: Configures the webserver port. Default is `8081`.
+* `REDIRECT_HOST`: Configures the webserver host. Default is `0.0.0.0`.
+* `REDIRECT_URI`: MongoDB connection URI. Default is `mongodb://mongo`.
+* `REDIRECT_DB`: MongoDB database name. Default is `REDIRECT`.
+* `REDIRECT_DISCORD_WEBHOOK`: Discord webhook URL. You can make one yourself, or omit it and not use it.
 
 ## API
 
@@ -36,4 +37,17 @@ Three headers are sent back in each response:
 
 IP addresses are stored in the `users` collection of the database.
 
-No other sensitive information is stored with this IP address, besides information critical to operation like basic metrics and rate limit data.
+No other sensitive information is stored with this IP address, besides information critical to operation like basic
+metrics and rate limit data.
+
+## Use
+
+You can post to `/{id}` with a JSON body containing the following fields:
+
+```json
+{
+    "to": "https://example.com/"
+}
+```
+
+Now, when you get to `/{id}`, you will get a redirect to `https://example.com/`.

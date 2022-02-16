@@ -6,20 +6,22 @@ If you want to run the webserver with an external provisioning/management system
 run the awaitable create_app.
 """
 
-from typing import Mapping
 import logging
 from os import environ
+from typing import Mapping
 
 from aiohttp import web
+from dislog import DiscordWebhookHandler
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from routes import ROUTES
 from utils.middlewares import *
 from utils.signals import *
 
-
 CONFIGURATION_PROVIDER: Mapping[str, str] = environ
-CONFIGURATION_KEY_PREFIX: str = "EXAMPLE"
+CONFIGURATION_KEY_PREFIX: str = "REDIRECT"
+
+
 # This could be a JSON or YAML file if you want to to be.
 
 
@@ -53,6 +55,13 @@ if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s:%(levelname)s:%(name)s: %(message)s"
     )
+
+    if CONFIGURATION_PROVIDER.get(f"{CONFIGURATION_KEY_PREFIX}_DISCORD_WEBHOOK", None) is not None:
+        logging.root.addHandler(
+            DiscordWebhookHandler(
+                CONFIGURATION_PROVIDER[f"{CONFIGURATION_KEY_PREFIX}_DISCORD_WEBHOOK"]
+            )
+        )
 
     port = int(CONFIGURATION_PROVIDER.get(f"{CONFIGURATION_KEY_PREFIX}_PORT", "8081"))
     host = CONFIGURATION_PROVIDER.get(f"{CONFIGURATION_KEY_PREFIX}_HOST", "0.0.0.0")

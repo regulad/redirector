@@ -9,5 +9,4 @@ async def set_response_headers(request: web.Request, response: web.Response) -> 
 
 ON_RESPONSE_PREPARE_SIGNALS: list = [set_response_headers]
 
-
 __all__ = ["ON_RESPONSE_PREPARE_SIGNALS"]
