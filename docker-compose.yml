@@ -1,0 +1,14 @@
+version: '3'
+services:
+  api:
+    image: ghcr.io/regulad/aiohttp-mongodb-base:latest  # You likely want to replace this with your image.
+    ports:
+      - "8081:8081/tcp"
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017/tcp"
+    volumes:
+      - db:/data/db
+volumes:
+  db:
