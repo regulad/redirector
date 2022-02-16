@@ -19,11 +19,14 @@ async def initialize_response_headers(request: web.Request, handler):
 
 @web.middleware
 async def real_ip_behind_proxy(request: web.Request, handler):
-    """Changes the remote attribute of the request to the X-Real-IP, if present. If you don't use a proxy,
+    """Changes the remote attribute of the request to the X-Real-IP or X-Forwarded-For, if present. If you don't use a proxy,
     you should get rid of this middleware. Also, you should use a proxy."""
 
     if request.headers.get("X-Real-IP") is not None:
         request = request.clone(remote=request.headers.get("X-Real-IP"))
+    
+    if request.headers.get("X-Forwarded-For") is not None:
+        request = request.clone(remote=request.headers.get("X-Forwarded-For"))
 
     return await handler(request)
 
