@@ -55,6 +55,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s:%(levelname)s:%(name)s: %(message)s"
     )
+    logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
 
     if CONFIGURATION_PROVIDER.get(f"{CONFIGURATION_KEY_PREFIX}_DISCORD_WEBHOOK", None) is not None:
         logging.root.addHandler(

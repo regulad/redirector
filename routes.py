@@ -1,3 +1,4 @@
+import logging
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -21,6 +22,8 @@ async def set_link(request: web.Request):
 
     await link_doc.update_db({"$set": {"redirect_to": redirect_to}})
 
+    logging.info(f"Will redirect {request.remote} at {link_id} to {redirect_to}")
+
     raise web.HTTPCreated(reason="Link created")
 
 
@@ -33,6 +36,8 @@ async def get_link(request: web.Request):
         raise web.HTTPNotFound(reason="Link not found")
 
     redirect_to: str = link_doc["redirect_to"]
+
+    logging.info(f"Redirecting {request.remote} at {link_id} to {redirect_to}")
 
     return web.HTTPFound(location=redirect_to)
 
