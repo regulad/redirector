@@ -132,7 +132,7 @@ async def get_link(request: web.Request):
              "remote": request.remote}
         )
 
-        if link_doc["webhook_url"] is not None:
+        if link_doc.get("webhook_url") is not None:
             asyncio.create_task(
                 handle_webhook(link_doc["webhook_url"], redirect_to, link_id, request, started_processing)
             )
