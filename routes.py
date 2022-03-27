@@ -1,13 +1,30 @@
+import asyncio
 import logging
 from datetime import datetime
 from urllib.parse import urlparse
 
-from aiohttp import web
+from aiohttp import web, ClientSession
 from motor.motor_asyncio import AsyncIOMotorCursor
 
 from utils.database import Document
 
 ROUTES: web.RouteTableDef = web.RouteTableDef()
+
+
+async def handle_webhook(
+        webhook_url: str,
+        redirect_to: str,
+        link_id: str,
+        request: web.Request,
+        started_processing: datetime
+) -> None:
+    try:
+        async with ClientSession() as session:
+            await session.post(webhook_url, json={"link_id": link_id, "redirected_to": redirect_to,
+                                                  "timestamp": started_processing.isoformat(),
+                                                  "remote": request.remote})
+    except Exception:
+        pass  # This ain't our problem.
 
 
 @ROUTES.post("/{id}")
@@ -27,6 +44,23 @@ async def set_link(request: web.Request):
     logging.info(f"Will redirect {request.remote} at {link_id} to {redirect_to}")
 
     raise web.HTTPCreated(reason="Link created")
+
+
+@ROUTES.post("/webhook/{id}")
+async def register_webhook(request: web.Request):
+    link_id: str = request.match_info["id"]
+    link_doc: Document = await Document.get_document(request.app["database"]["links"], {"_id": link_id})
+
+    if link_doc.get("redirect_to") is None:
+        raise web.HTTPNotFound(reason="Link not found")
+    else:
+        webhook_url: str = await request.text()
+
+        await link_doc.update_db({"$set": {"webhook_url": webhook_url}})
+
+        logging.info(f"{request.remote} registered webhook {webhook_url} for {link_id}")
+
+        return web.HTTPOk(reason="Webhook registered")
 
 
 @ROUTES.delete("/{id}")
@@ -97,6 +131,11 @@ async def get_link(request: web.Request):
             {"link_id": link_id, "redirected_to": redirect_to, "timestamp": started_processing,
              "remote": request.remote}
         )
+
+        if link_doc["webhook_url"] is not None:
+            asyncio.create_task(
+                handle_webhook(link_doc["webhook_url"], redirect_to, link_id, request, started_processing)
+            )
 
         logging.info(f"Redirecting {request.remote} at {link_id} to {redirect_to}")
 
