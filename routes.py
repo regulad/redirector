@@ -22,7 +22,7 @@ async def handle_webhook(
         async with ClientSession() as session:
             await session.post(webhook_url, json={"link_id": link_id, "redirected_to": redirect_to,
                                                   "timestamp": started_processing.isoformat(),
-                                                  "remote": request.remote})
+                                                  "remote": request.remote, "user_agent": request.headers.get("User-Agent")})
     except Exception:
         pass  # This ain't our problem.
 
@@ -124,12 +124,24 @@ async def get_link(request: web.Request):
         redirect_to: str = link_doc["redirect_to"]
 
         await link_doc.update_db(
-            {"$set": {"last_access": started_processing, "last_remote": request.remote}, "$inc": {"hits": 1}}
+            {
+                "$set": {
+                    "last_access": started_processing,
+                    "last_remote": request.remote,
+                    "last_user_agent": request.headers.get("User-Agent", link_doc.get("last_user_agent")),
+                },
+                "$inc": {"hits": 1}
+            }
         )
 
         await request.app["database"]["hits"].insert_one(
-            {"link_id": link_id, "redirected_to": redirect_to, "timestamp": started_processing,
-             "remote": request.remote}
+            {
+                "link_id": link_id,
+                "redirected_to": redirect_to,
+                "timestamp": started_processing,
+                "remote": request.remote,
+                "user_agent": request.headers.get("User-Agent"),
+            }
         )
 
         if link_doc.get("webhook_url") is not None:
